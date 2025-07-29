@@ -2,175 +2,88 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# -------------------------------
-# PAGE CONFIG
-# -------------------------------
-st.set_page_config(page_title="Resume vs Reality", page_icon="📄", layout="wide")
+# ---- PAGE CONFIG ----
+st.set_page_config(
+    page_title="Resume vs Reality",
+    layout="wide",
+    page_icon="✨"
+)
 
-# -------------------------------
-# CUSTOM STYLING
-# -------------------------------
+# ---- CUSTOM STYLE (Glassmorphism + Clean Fonts) ----
 st.markdown("""
     <style>
-    html, body {
-        font-family: 'Helvetica', sans-serif;
-        background-color: #fefefe;
-        color: #333333;
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap');
+    html, body, [class*="css"]  {
+        font-family: 'Manrope', sans-serif;
+        background: #f8f8f9;
     }
-    .big-title {
-        font-size: 2.4em;
-        font-weight: bold;
-        color: #ff4da6;
-        margin-top: 0.5em;
+    .main {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
-    .tagline {
-        font-size: 1.2em;
-        color: #ff944d;
-        margin-bottom: 1.5em;
-    }
-    .section-box {
-        background-color: #fff6fb;
-        border-left: 6px solid #ff4da6;
-        padding: 1.2em;
-        margin-bottom: 1.2em;
-        border-radius: 10px;
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
     .stTabs [role="tab"] {
-        background: #ffe0f0;
-        color: black;
-        font-weight: bold;
-        border-radius: 10px 10px 0 0;
+        padding: 8px 24px;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #333;
+        border-radius: 12px 12px 0 0;
+        background: #eaeaea;
         margin-right: 8px;
     }
     .stTabs [aria-selected="true"] {
-        background: #ff4da6;
+        background: #5e60ce;
         color: white;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------
-# SAMPLE DATA
-# -------------------------------
-@st.cache_data
-def load_data():
-    data = {
-        "Skill": [
-            "Python", "SQL", "Excel", "Communication", "Teamwork", "Power BI",
-            "Market Research", "SEO", "Canva", "Recruitment", "Negotiation",
-            "CRM", "Time Management", "Leadership", "Data Visualization", "Creativity",
-            "Presentation Skills"
-        ],
-        "Job Ads": [80, 75, 70, 68, 65, 60, 58, 55, 52, 50, 48, 47, 45, 42, 40, 39, 38],
-        "Resumes": [60, 50, 72, 90, 88, 40, 35, 48, 30, 55, 60, 50, 44, 41, 30, 60, 39],
-        "Hires": [75, 70, 65, 60, 55, 58, 40, 42, 29, 50, 55, 45, 38, 39, 48, 34, 33],
-        "Category": [
-            "Technical", "Technical", "Technical", "Soft Skill", "Soft Skill", "Technical",
-            "Analytical", "Marketing", "Marketing", "HR", "Sales", "Sales", "Productivity",
-            "Leadership", "Data", "Creativity", "Presentation"
-        ]
-    }
-    return pd.DataFrame(data)
+# ---- APP TITLE & HEADER ----
+st.title("💼 Resume vs Reality")
+st.subheader("✨ Which Skills Actually Help You Get Hired?")
+st.markdown("We all build resumes hoping they reflect our potential. But behind every hiring decision lies a pattern. "
+            "This project is a search for those patterns — an exploration of the gap between what we write and what employers value. "
+            "**Here, data becomes your mentor.** The truth? It’s not always what you think.")
 
-skills_df = load_data()
-
-# -------------------------------
-# SIDEBAR FOR FILTERS
-# -------------------------------
-st.sidebar.title("🔍 Filters")
-category_filter = st.sidebar.multiselect(
-    "Select Skill Categories",
-    options=skills_df["Category"].unique(),
-    default=skills_df["Category"].unique()
-)
-
-filtered_df = skills_df[skills_df["Category"].isin(category_filter)]
-
-# -------------------------------
-# TABS UI
-# -------------------------------
-tabs = st.tabs(["🏠 Welcome", "📊 Skill Reality", "🎯 Score Check"])
-
-# -------------------------------
-# WELCOME TAB
-# -------------------------------
-with tabs[0]:
-    st.markdown("<div class='big-title'>Resume vs Reality</div>", unsafe_allow_html=True)
-    st.markdown("<div class='tagline'>What we list. What they want. What actually gets you hired.</div>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-        <div class='section-box'>
-        👋 Welcome! This app helps job seekers understand which skills matter the most in the hiring process.
-        
-        You'll explore how your **resume aligns with job postings** and what people who get hired usually have on their resumes.
-
-        As the developer (and a fellow MBA student 😅), I built this because I’ve personally felt the anxiety of job hunting. This app is like a flashlight in the dark job market, giving you **insights, encouragement**, and **real data**.
-
-        Let's channel our stress into strategy! 🚀
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-        <div class='section-box'>
-        🧭 **How to use this app:**
-        - Go to **Skill Reality** to see which skills are common in resumes vs hiring vs job ads
-        - Try **Score Check** to input your own skills and see your match with job expectations
-        - Use sidebar to filter by skill categories like Technical, Soft Skills, Marketing, etc.
-        </div>
-    """, unsafe_allow_html=True)
-
-# -------------------------------
-# INSIGHTS TAB
-# -------------------------------
-with tabs[1]:
-    st.markdown("## 📊 Skill Popularity & Reality")
-
-    fig = px.bar(
-        filtered_df.sort_values("Job Ads", ascending=False),
-        x="Skill", y=["Job Ads", "Resumes", "Hires"],
-        barmode="group", text_auto=True,
-        color_discrete_sequence=["#ff944d", "#d63384", "#007bff"]
-    )
-    fig.update_layout(title="Skill Mentions in Job Ads vs Resumes vs Hires", xaxis_title="", yaxis_title="Frequency")
-    st.plotly_chart(fig, use_container_width=True)
-
+# ---- PERSONAL NARRATIVE ----
+with st.expander("👩‍💻 Why this app matters (from the developer)"):
     st.markdown("""
-        <div class='section-box'>
-        💡 <b>Insight:</b> Some skills like Python and SQL are underrepresented in resumes but highly sought in job ads and present in hires. On the other hand, soft skills like "Teamwork" and "Communication" are heavily listed but don't always give you a hiring edge.
-        </div>
-    """, unsafe_allow_html=True)
+    As an MBA student navigating the complex, anxiety-filled job market, I found myself wondering:
+    > _"Am I listing the right skills? Do recruiters even care about what I’ve put on my resume?"_
 
-# -------------------------------
-# SCORE CHECK TAB
-# -------------------------------
-with tabs[2]:
-    st.markdown("## 🎯 Check Your Resume Fit")
-    st.markdown("Type the skills from your resume and see how well you align with actual job expectations.")
+    This app channels that anxiety into a **productive exploration** — one that helps job seekers see behind the curtain using real data.
 
-    user_input = st.text_input("🔠 Enter your skills (comma-separated)", "Python, Excel, Teamwork")
-    user_skills = [x.strip().title() for x in user_input.split(",") if x.strip()]
+    It’s not just about skills. It’s about **clarity**, **confidence**, and giving you a **lens to see what recruiters are actually hiring for**.
 
-    if user_skills:
-        match = skills_df[skills_df["Skill"].isin(user_skills)]
-        total = len(user_skills)
-        matched = len(match)
-        score = round((matched / total) * 100) if total > 0 else 0
+    Welcome to *Resume vs Reality* — your data-driven, friendly career coach. ✨
+    """)
 
-        st.metric("📈 Resume Match Score", f"{score}%")
-        
-        missing = [s for s in user_skills if s not in skills_df["Skill"].values]
-        matched_skills = ", ".join(match["Skill"].tolist()) or "None"
+# ---- TABS LAYOUT ----
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Insights", "📎 Resume Match", "🔮 AI Prediction", "📥 Report"])
 
-        st.markdown(f"<b>✅ Recognized Skills:</b> {matched_skills}", unsafe_allow_html=True)
-        if missing:
-            st.markdown(f"<b>⚠️ Not in hiring data:</b> {', '.join(missing)}", unsafe_allow_html=True)
+# ---- PLACEHOLDERS FOR NEXT PHASES ----
+with tab1:
+    st.markdown("#### 📊 Skill Trends and Visual Comparisons will appear here...")
+    st.info("This section will compare skills in resumes, job listings, and hired profiles with charts. Coming soon!")
 
-        st.markdown("""
-            <div class='section-box'>
-            🎯 Your score tells you how well your listed skills match up with real-world job needs. It's not perfect—but it's a start! Consider brushing up on the top-demand skills from earlier tabs.
-            </div>
-        """, unsafe_allow_html=True)
+with tab2:
+    st.markdown("#### 📎 Compare Your Resume to a Job Description")
+    st.info("Paste your skills and a job ad to see overlap, gaps, and tips. This will be interactive.")
 
-# -------------------------------
-# END
-# -------------------------------
+with tab3:
+    st.markdown("#### 🔮 See How Likely You Are to Get Shortlisted")
+    st.info("Enter your skill list and get a probability score based on our trained AI model. Visual scoring bar coming up!")
+
+with tab4:
+    st.markdown("#### 📥 Download Personalized Report")
+    st.info("This section will allow export/sharing of your insights and feedback.")
+
+# ---- FOOTER ----
+st.markdown("---")
+st.markdown("© 2025 Resume vs Reality | Built with ❤️ by an MBA student for fellow dream chasers.")
