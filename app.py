@@ -2,147 +2,159 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- Page Config ---
-st.set_page_config(page_title="Resume vs Reality", page_icon="🎯", layout="wide")
+# -- Load enriched skills data
+@st.cache_data
+def load_data():
+    return pd.read_csv("enriched_skills_data.csv")
 
-# --- Styling ---
+df = load_data()
+
+# -- App layout setup
+st.set_page_config(
+    page_title="Resume vs Reality",
+    layout="wide",
+    page_icon="🎯"
+)
+
+# -- Global Colors and Fonts
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Helvetica&display=swap');
-    .stApp {
-        background-color: #f8f9fa;
+    html, body {
         font-family: 'Helvetica', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
     }
     .big-title {
-        color: #5a189a;
-        font-size: 2.5em;
+        font-size: 40px;
+        font-weight: bold;
+        color: #ff4da6;
         text-align: center;
-        font-weight: 700;
-        margin-bottom: 0.2em;
+        margin-top: 20px;
     }
     .tagline {
-        color: #9d4edd;
-        font-size: 1.2em;
+        font-size: 18px;
         text-align: center;
-        margin-bottom: 1.5em;
+        color: #555;
+        margin-bottom: 30px;
     }
-    .box {
-        background-color: white;
-        border-left: 6px solid #9d4edd;
-        padding: 1.2em;
-        margin-bottom: 1em;
-        border-radius: 10px;
-        box-shadow: 0px 3px 6px rgba(0,0,0,0.05);
+    .section {
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Load Dummy Data ---
-@st.cache_data
-def load_data():
-    return pd.DataFrame({
-        "Skill": ["Excel", "SQL", "Python", "Communication", "Teamwork", "Power BI", "Market Research"],
-        "Category": ["Tool", "Tool", "Tool", "Soft Skill", "Soft Skill", "Tool", "Domain Knowledge"],
-        "Job Ads": [92, 76, 68, 45, 41, 32, 29],
-        "Resumes": [88, 49, 37, 93, 88, 27, 30],
-        "Hires": [64, 54, 55, 37, 31, 18, 15]
-    })
+# -- Main Title
+st.markdown('<div class="big-title">💡 Resume vs Reality</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">Your friendly compass through the hiring maze — backed by real data, designed for dreamers & doers.</div>', unsafe_allow_html=True)
 
-df = load_data()
+# -- Tabs Layout
+tabs = st.tabs(["🏠 Welcome", "📊 Insights", "🧠 Role Fit & Score", "🔍 Custom Prediction", "💬 About"])
 
-# --- Tabs Layout ---
-tab1, tab2, tab3, tab4 = st.tabs(["🏠 Welcome", "📊 Skill Insights", "🔍 Skill Analyzer", "🎯 Fit Predictor"])
+# -------- TAB 1: WELCOME --------
+with tabs[0]:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.markdown("## 👋 Welcome to Resume vs Reality")
+    st.write("""
+    Have you ever wondered whether the skills on your resume really align with what hiring managers want?
 
-# --- Tab 1: Welcome ---
-with tab1:
-    st.markdown("<div class='big-title'>✨ Resume vs Reality</div>", unsafe_allow_html=True)
-    st.markdown("<div class='tagline'>A career compass that cuts through resume buzzwords and shows what *actually* helps you get hired.</div>", unsafe_allow_html=True)
+    As an **MBA student myself**, I’ve felt the anxiety of trying to guess what skills to highlight. That’s why I built this app — to help job seekers **see through the fog** using actual data from:
+    - Real **job listings**
+    - Actual **resumes**
+    - Profiles of **hired candidates**
 
-    st.markdown("""
-    <div class='box'>
-    <p>
-    Hi! I’m <strong>Manju Singh</strong>, an MBA student with a passion for analytics, storytelling, and all things data. Like many of you, I’ve spent hours tweaking my resume, wondering which skills truly matter. Do recruiters care more about Excel or Power BI? Is teamwork overrated? Where does reality meet expectation?
-    </p>
-    <p>
-    This project was born from that very anxiety — the invisible gap between what we <em>think</em> employers want and what actually drives hiring. It’s part career tool, part therapist, part data dashboard.
-    </p>
-    <p>
-    You’ll see skills visualized, resume myths debunked, and maybe even a little spark of hope. This app is for anyone who’s stared at a job ad with sweaty palms and thought: <em>“Am I enough?”</em> Here’s your friendly data-driven answer. Let's turn confusion into clarity. 🌸
-    </p>
-    </div>
-    """, unsafe_allow_html=True)
+    💖 Think of this app as your wiser, tech-savvy older sister telling you: “That’s cute, but SQL is what’ll get you hired.”
 
-# --- Tab 2: Skill Insights ---
-with tab2:
-    st.header("📊 Skill Frequency & Value")
-    cols = st.columns(3)
-    with cols[0]:
-        category_filter = st.selectbox("🔍 Filter by Skill Type", ["All"] + sorted(df["Category"].unique()))
-    with cols[1]:
-        top_n = st.slider("🎯 Top N Skills", 3, len(df), 7)
-    with cols[2]:
-        metric_choice = st.selectbox("📈 Sort By", ["Job Ads", "Resumes", "Hires"])
+    🔄 Navigate through the tabs to:
+    - Explore **trending and overhyped skills**
+    - Get a **score on your skill set** for different roles
+    - Predict your **probability of getting hired**
 
-    if category_filter != "All":
-        df_filtered = df[df["Category"] == category_filter]
-    else:
-        df_filtered = df.copy()
+    Let's channel the stress into clarity and confidence. ✨
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    df_top = df_filtered.sort_values(by=metric_choice, ascending=False).head(top_n)
+# -------- TAB 2: INSIGHTS --------
+with tabs[1]:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.header("📊 Insights: What Skills Really Matter?")
+    category_filter = st.multiselect("🎯 Filter by Skill Category", df['Category'].unique(), default=df['Category'].unique())
 
-    fig = px.bar(df_top, x="Skill", y=["Job Ads", "Resumes", "Hires"], barmode="group",
-                 color_discrete_sequence=["#9d4edd", "#f72585", "#3a86ff"])
-    fig.update_layout(title="📊 Skill Visibility Across Sources", xaxis_title=None, yaxis_title="Frequency")
+    filtered = df[df['Category'].isin(category_filter)]
+
+    fig = px.bar(filtered.sort_values("Job Ads", ascending=False).head(15),
+                 x="Skill", y=["Job Ads", "Resumes", "Hires"],
+                 barmode="group",
+                 color_discrete_sequence=["#ff4da6", "#ffc107", "#8bc34a"],
+                 title="Top Skills by Appearance in Job Ads, Resumes & Hires")
+
+    fig.update_layout(xaxis_title="", yaxis_title="Frequency", plot_bgcolor="#fafafa")
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("<div class='box'>💡 Some skills look great on paper but don’t translate to interviews. Watch for those that rank high in resumes but low in hiring!</div>", unsafe_allow_html=True)
+    st.info("💡 Insight: Skills like Python and SQL appear in fewer resumes than expected — yet are consistently present in hires!")
 
-# --- Tab 3: Skill Analyzer ---
-with tab3:
-    st.header("🔍 Select Skills to Analyze")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    df["Resume Inflation"] = (df["Resumes"] + 1) / (df["Job Ads"] + 1)
-    df["Hiring Edge"] = (df["Hires"] + 1) / (df["Resumes"] + 1)
-
-    st.markdown("Choose skills and see how they stack up in reality. Use this to reflect on your current resume keywords.")
-
-    selected_skills = st.multiselect("Select skills", df["Skill"].tolist(), default=["Python", "Communication"])
-
-    if selected_skills:
-        insight_df = df[df["Skill"].isin(selected_skills)]
-        st.write(insight_df[["Skill", "Job Ads", "Resumes", "Hires", "Resume Inflation", "Hiring Edge"]].reset_index(drop=True))
-
-        fig2 = px.scatter(insight_df, x="Resume Inflation", y="Hiring Edge", text="Skill",
-                          color="Category", size="Hires", hover_data=["Job Ads", "Resumes"])
-        fig2.update_traces(textposition="top center")
-        st.plotly_chart(fig2, use_container_width=True)
-
-# --- Tab 4: Fit Predictor ---
-with tab4:
-    st.header("🎯 Your Resume Fit Score")
-    st.markdown("Enter the skills you currently have and your target job type. We'll tell you how close you are to the real deal.")
-
-    user_skills = st.text_input("🧾 List your skills (comma separated)", "Excel, Python, Communication")
-    target_role = st.selectbox("Choose a job target", ["Analyst", "Marketing", "HR", "Sales"], key="rolepicker")
-
+# -------- TAB 3: ROLE FIT SCORE --------
+with tabs[2]:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.header("🧠 Role Fit Score")
     role_skills = {
-        "Analyst": ["Excel", "Python", "SQL"],
-        "Marketing": ["Communication", "SEO", "Market Research"],
-        "HR": ["Recruitment", "Communication", "Teamwork"],
-        "Sales": ["Negotiation", "CRM", "Communication"]
+        "Analyst": ["SQL", "Python", "Excel", "Power BI", "Data Visualization"],
+        "Marketing": ["SEO", "Canva", "Market Research", "Creativity", "Social Media"],
+        "HR": ["Recruitment", "Communication", "Teamwork", "Leadership"],
+        "Sales": ["Negotiation", "CRM", "Time Management", "Presentation Skills"]
     }
 
-    if user_skills:
-        user_set = set([x.strip().title() for x in user_skills.split(",")])
-        target_set = set(role_skills.get(target_role, []))
-        matched = user_set & target_set
-        score = int((len(matched) / len(target_set)) * 100) if target_set else 0
+    role = st.selectbox("Choose a job role:", list(role_skills.keys()))
+    user_input = st.text_input("🔍 Enter your skills (comma-separated)", placeholder="e.g., Python, Excel, Communication")
 
-        st.metric("💡 Resume Fit Score", f"{score}%")
+    if user_input:
+        user_set = set([s.strip().title() for s in user_input.split(',')])
+        role_set = set(role_skills[role])
+        match = user_set & role_set
+        missing = role_set - user_set
 
-        if score == 100:
-            st.success("🌟 Perfect Match! You're ready to go.")
-        elif score >= 60:
-            st.info(f"You're close! Consider adding: {', '.join(target_set - matched)}")
-        else:
-            st.warning(f"You may want to focus on these: {', '.join(target_set - matched)}")
+        score = round((len(match) / len(role_set)) * 100)
+        st.metric(label="💼 Fit Score", value=f"{score}%", delta_color="normal")
+
+        st.success(f"✅ Matched Skills: {', '.join(match) if match else 'None'}")
+        st.warning(f"📌 Missing Key Skills for {role}: {', '.join(missing) if missing else 'None'}")
+
+        if score < 70:
+            st.info("📘 Pro Tip: Consider learning these to boost your profile!")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# -------- TAB 4: CUSTOM PREDICTION --------
+with tabs[3]:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.header("🔍 Predict Hiring Probability")
+
+    input_skills = st.multiselect("Select your current skills:", options=sorted(df["Skill"].unique()))
+    top_hire_avg = df[df["Hires"] > df["Hires"].mean()]
+
+    if input_skills:
+        match_count = sum([1 for skill in input_skills if skill in top_hire_avg["Skill"].values])
+        prediction_score = int((match_count / len(top_hire_avg)) * 100)
+        st.metric("📈 Predicted Hiring Score", f"{prediction_score}%", delta=None)
+
+        st.info(f"🧠 {match_count} of your skills are frequently seen among hired profiles.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# -------- TAB 5: ABOUT --------
+with tabs[4]:
+    st.markdown('<div class="section">', unsafe_allow_html=True)
+    st.header("💬 About This Project")
+    st.write("""
+    - 🔧 **Built by**: Manju Singh, an MBA student with a deep interest in data, design & decision-making.
+    - 🎯 **Purpose**: To demystify the resume-writing process by helping others visualize what skills matter most — based on hiring data.
+    - 📌 **Technologies Used**: Streamlit, Plotly, Pandas
+
+    ❤️ If this app gave you even a tiny bit of clarity, consider sharing it with someone else staring at a blank resume right now.
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
