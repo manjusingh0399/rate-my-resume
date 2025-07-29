@@ -2,65 +2,69 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- Theme Colors ---
+# Theme Colors
 BLACK = "#18181b"
 PINK = "#ff4da6"
 WHITE = "#f9fafb"
-GRAY = "#232329"
 ORANGE = "#ffa07a"
 
-# --- Streamlit Page Settings ---
-st.set_page_config(
-    page_title="Resume vs Reality",
-    page_icon="✨",
-    layout="wide"
-)
+# Streamlit Page Config
+st.set_page_config(page_title="Resume vs Reality", page_icon="✨", layout="wide")
 
-# --- Custom Styling ---
-st.markdown(
-    f"""
+# Styling
+st.markdown(f"""
     <style>
-    body {{background: {BLACK}; color: {WHITE};}}
-    .css-10trblm {{color: {PINK}!important;}}
-    .insight-card {{
-        border-radius:13px; background:{WHITE}; color:{BLACK};
-        font-size:1.1rem; margin:1.5em 0 .8em 0; padding:1.2em;
-        border-left:7px solid {PINK}; box-shadow:0 2px 8px #0002;
+    .stApp {{
+        background-color: {BLACK};
     }}
-    .big-header {{
-        font-size:2.4em; font-weight:bold; color:{PINK};
-        text-shadow:0 2px 18px #0007;
-        margin-top:.7em; margin-bottom:.2em;
+    h1, h2, h3, h4 {{
+        color: {PINK};
+    }}
+    .section-header {{
+        font-size: 1.8em; font-weight: bold; color: {ORANGE};
+        margin-top: 1.2em; margin-bottom: 0.3em;
+    }}
+    .description-box {{
+        background-color: {WHITE}; color: {BLACK};
+        padding: 1em; border-radius: 8px;
+        margin-bottom: 1em; box-shadow: 0 2px 10px #0003;
     }}
     </style>
-    """, unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
-# --- Sidebar Navigation ---
-st.sidebar.image("https://img.icons8.com/emoji/96/fairy.png", width=70)
-st.sidebar.title("✨ Navigation")
-menu = st.sidebar.radio("Jump to", [
-    "🏠 Welcome",
-    "📊 Insights",
-    "📈 Role Explorer",
-    "🎯 Score & Feedback",
-    "ℹ️ About"
-])
-
-# --- Dummy Dataset (Replace with your real data) ---
+# Load example dataset (replace with actual processed data)
 @st.cache_data
 def load_data():
-    skills = pd.DataFrame({
+    return pd.DataFrame({
         "Skill": ["Excel", "SQL", "Python", "Communication", "Teamwork", "Power BI", "Market Research"],
         "Job Ads": [92, 76, 68, 45, 41, 32, 29],
         "Resumes": [88, 49, 37, 93, 88, 27, 30],
         "Hires": [64, 54, 55, 37, 31, 18, 15]
     })
-    return skills
 
 skills = load_data()
 
-# --- Core Role Skills (Dummy) ---
+# Page Header
+st.markdown("<h1 style='text-align:center;'>✨ Resume vs Reality</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; font-size:18px;'>Let’s cut through the fluff — here’s what actually gets you hired 👀</p>", unsafe_allow_html=True)
+
+# Section 1: Overview of Skills
+st.markdown("<div class='section-header'>📊 Skill Landscape</div>", unsafe_allow_html=True)
+st.markdown("<div class='description-box'>This chart shows how often key skills appear in job ads, resumes, and among hires. Spot what’s hot, what’s not, and what’s oversold.</div>", unsafe_allow_html=True)
+
+fig = px.bar(skills, x="Skill", y=["Job Ads", "Resumes", "Hires"], barmode="group",
+             color_discrete_sequence=[PINK, WHITE, "#65fcda"],
+             title="Skill Frequency: Job Listings vs Resumes vs Hires")
+fig.update_layout(
+    plot_bgcolor=BLACK, paper_bgcolor=BLACK, font_color=WHITE,
+    legend=dict(font=dict(color=WHITE)), xaxis=dict(color=WHITE), yaxis=dict(color=WHITE)
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# Section 2: Personalized Fit Checker
+st.markdown("<div class='section-header'>🎯 Resume Fit Score</div>", unsafe_allow_html=True)
+st.markdown("<div class='description-box'>Drop in your skills and select your target job. We’ll give you your fit score, point out missing areas, and coach you on what to learn next.</div>", unsafe_allow_html=True)
+
 skills_role = {
     "Analyst": ["SQL", "Python", "Excel"],
     "Marketing": ["Canva", "SEO", "Market Research"],
@@ -68,86 +72,43 @@ skills_role = {
     "Sales": ["Negotiation", "CRM"]
 }
 
-# --- Content Sections ---
-if menu == "🏠 Welcome":
-    st.markdown(f'<div class="big-header">✨ Resume vs Reality</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="insight-card">Welcome! Think of this as your stylish, brutally honest older sister telling you what *actually* lands the job. Data doesn’t lie—but it can sparkle! 💅</div>',
-        unsafe_allow_html=True)
-    st.markdown("Use the sidebar to explore skills, roles, and your hiring potential. Let’s glow up your resume! 💖")
+col1, col2 = st.columns(2)
+with col1:
+    user_skills = st.text_input("Your Skills (comma-separated)", "Excel, Python, Communication")
+with col2:
+    role = st.selectbox("Target Role", list(skills_role.keys()))
 
-elif menu == "📊 Insights":
-    st.markdown("<h2 style='color:#ff4da6;'>Key Skill Insights</h2>", unsafe_allow_html=True)
-    
-    # Bar Chart
-    fig = px.bar(
-        skills, x="Skill", y=["Job Ads", "Resumes", "Hires"],
-        barmode="group", color_discrete_sequence=[PINK, WHITE, "#65fcda"]
-    )
-    fig.update_layout(
-        plot_bgcolor=BLACK, paper_bgcolor=BLACK, font_color=WHITE,
-        legend=dict(font=dict(color=WHITE)), xaxis=dict(color=WHITE), yaxis=dict(color=WHITE)
-    )
-    st.plotly_chart(fig, use_container_width=True)
+user_set = set([s.strip().capitalize() for s in user_skills.split(",") if s.strip()])
+target_set = set(skills_role.get(role, []))
+score = int(100 * len(user_set & target_set) / len(target_set)) if target_set else 0
 
-    st.markdown(
-        '<div class="insight-card">💡 <b>Insight:</b> Resumes love soft skills like "Teamwork", but hiring favors actual tools—Python, SQL, and Excel. So yes, be nice—but also know your way around a database. 😉</div>',
-        unsafe_allow_html=True
-    )
+st.metric("📈 Resume Match Score", f"{score}/100")
 
-elif menu == "📈 Role Explorer":
-    st.markdown("<h2 style='color:#ff4da6;'>Explore By Role</h2>", unsafe_allow_html=True)
-    role = st.selectbox("Choose a target job role", list(skills_role.keys()))
-    core_skills = skills_role.get(role, [])
-    core = ", ".join(core_skills)
-    st.markdown(f'<div class="insight-card"><b>{role} roles:</b> Most-wanted skills are {core}.</div>', unsafe_allow_html=True)
+missing = target_set - user_set
+if score == 100:
+    st.success("💥 Perfect Match! You're resume-ready for this role!")
+elif score >= 60:
+    st.info(f"⚡ Pretty good! You might still want to pick up: {', '.join(missing)}")
+else:
+    st.warning(f"📉 Hmm… time to level up with: {', '.join(missing)}")
 
-    # Pie Chart
-    role_data = pd.DataFrame({
-        "Skill": core_skills,
-        "Importance": [100 - i * 20 for i in range(len(core_skills))]
-    })
-    fig = px.pie(role_data, names="Skill", values="Importance",
-                 title=f"Top Skills for {role}",
-                 color_discrete_sequence=[PINK, ORANGE, WHITE])
-    st.plotly_chart(fig, use_container_width=True)
+# Section 3: Tailored Advice
+advice_map = {
+    "Python": "Python is the real MVP for data roles — get comfy with it.",
+    "SQL": "Without SQL, you're skipping the language of databases.",
+    "Excel": "Spreadsheets aren't sexy, but Excel is essential.",
+    "Canva": "For marketing? Canva is your creative BFF.",
+    "SEO": "SEO = Visibility. It’s your digital megaphone.",
+    "Market Research": "Know the market. Own the strategy.",
+    "Recruitment": "No HR game without sourcing like a pro.",
+    "Communication": "Talk the talk — soft skills close the deal.",
+    "Negotiation": "Sales 101: Win hearts, close deals.",
+    "CRM": "CRM tools = Organized selling + Better pipelines."
+}
 
-elif menu == "🎯 Score & Feedback":
-    st.markdown("<h2 style='color:#ff4da6;'>Your Score & Advice</h2>", unsafe_allow_html=True)
-    myskills = st.text_input("Enter your skills (comma-separated)", "Excel, Python, Communication")
-    role = st.selectbox("Target role?", list(skills_role.keys()), key="scorerole")
-    pick = set([x.strip().capitalize() for x in myskills.split(",") if x.strip()])
-    target = set(skills_role.get(role, []))
-    score = int(100 * len(pick & target) / len(target)) if target else 0
+for skill in missing:
+    st.markdown(f"<div class='description-box'>💡 {advice_map.get(skill, 'Add ' + skill.title())}</div>", unsafe_allow_html=True)
 
-    st.progress(score)
-    st.metric("Resume Fit Score", f"{score}/100")
-
-    missing = target - pick
-    advice = {
-        "Python": "Learning Python can launch your Analyst career.",
-        "SQL": "SQL is crucial for data roles.",
-        "Excel": "Excel is essential everywhere.",
-        "Canva": "Canva helps tell visual stories for Marketers.",
-        "SEO": "SEO skills boost digital marketing jobs.",
-        "Market Research": "Strengthen your market research side.",
-        "Recruitment": "HR jobs always value recruitment skills.",
-        "Communication": "Communication matters in every field.",
-        "Negotiation": "Negotiation sets Sales pros apart.",
-        "CRM": "Salesforce/HubSpot experience is valued!"
-    }
-
-    if score == 100:
-        st.balloons()
-        st.markdown('<div class="insight-card" style="border-left:8px solid #65fc65;">🌟 Amazing! You’ve nailed the perfect match. Add a little sparkle and hit submit!</div>', unsafe_allow_html=True)
-    elif score >= 60:
-        st.snow()
-        st.markdown(f'<div class="insight-card">You’re almost there! You might want to brush up on: {", ".join(missing)}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown("<div class='insight-card' style='border-left:8px solid #ffae42;'>Let’s glow up your skill set. Here’s what to work on:</div>", unsafe_allow_html=True)
-        for skill in missing:
-            st.markdown(f'<div class="insight-card" style="border-left:7px solid #ffc400;">{advice.get(skill, "Add " + skill.title())}</div>', unsafe_allow_html=True)
-
-elif menu == "ℹ️ About":
-    st.markdown("<h2 style='color:#ff4da6;'>About This Project</h2>", unsafe_allow_html=True)
-    st.markdown("<div class='insight-card'>This app was lovingly crafted to expose the real hiring truth. It’s stylish, sassy, and straight from the data. No fluff—just facts and fun. Share it, learn from it, and glow up your career. 💖</div>", unsafe_allow_html=True)
+# Footer
+st.markdown("---")
+st.markdown("<p style='text-align:center; font-size:14px;'>🚀 Built with love to demystify hiring. No gatekeeping, just glow-ups.</p>", unsafe_allow_html=True)
