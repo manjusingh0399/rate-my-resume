@@ -1,59 +1,153 @@
-
 import streamlit as st
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 
-# Load dataset
-data = pd.read_csv('credit_data.csv')
+# --- Theme Colors ---
+BLACK = "#18181b"
+PINK = "#ff4da6"
+WHITE = "#f9fafb"
+GRAY = "#232329"
+ORANGE = "#ffa07a"
 
-# Target and features
-X = data.drop(columns=['SeriousDlqin2yrs'])
-y = data['SeriousDlqin2yrs']
+# --- Streamlit Page Settings ---
+st.set_page_config(
+    page_title="Resume vs Reality",
+    page_icon="✨",
+    layout="wide"
+)
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# --- Custom Styling ---
+st.markdown(
+    f"""
+    <style>
+    body {{background: {BLACK}; color: {WHITE};}}
+    .css-10trblm {{color: {PINK}!important;}}
+    .insight-card {{
+        border-radius:13px; background:{WHITE}; color:{BLACK};
+        font-size:1.1rem; margin:1.5em 0 .8em 0; padding:1.2em;
+        border-left:7px solid {PINK}; box-shadow:0 2px 8px #0002;
+    }}
+    .big-header {{
+        font-size:2.4em; font-weight:bold; color:{PINK};
+        text-shadow:0 2px 18px #0007;
+        margin-top:.7em; margin-bottom:.2em;
+    }}
+    </style>
+    """, unsafe_allow_html=True
+)
 
-# Scale features
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# --- Sidebar Navigation ---
+st.sidebar.image("https://img.icons8.com/emoji/96/fairy.png", width=70)
+st.sidebar.title("✨ Navigation")
+menu = st.sidebar.radio("Jump to", [
+    "🏠 Welcome",
+    "📊 Insights",
+    "📈 Role Explorer",
+    "🎯 Score & Feedback",
+    "ℹ️ About"
+])
 
-# Train model
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train_scaled, y_train)
+# --- Dummy Dataset (Replace with your real data) ---
+@st.cache_data
+def load_data():
+    skills = pd.DataFrame({
+        "Skill": ["Excel", "SQL", "Python", "Communication", "Teamwork", "Power BI", "Market Research"],
+        "Job Ads": [92, 76, 68, 45, 41, 32, 29],
+        "Resumes": [88, 49, 37, 93, 88, 27, 30],
+        "Hires": [64, 54, 55, 37, 31, 18, 15]
+    })
+    return skills
 
-# Streamlit UI
-st.title("🏦 Credit Risk Prediction App")
+skills = load_data()
 
-st.sidebar.header("Enter Customer Details")
+# --- Core Role Skills (Dummy) ---
+skills_role = {
+    "Analyst": ["SQL", "Python", "Excel"],
+    "Marketing": ["Canva", "SEO", "Market Research"],
+    "HR": ["Communication", "Recruitment"],
+    "Sales": ["Negotiation", "CRM"]
+}
 
-# Collect user input
-age = st.sidebar.slider("Age", 18, 70, 30)
-monthly_income = st.sidebar.number_input("Monthly Income (INR)", value=10000)
-debt_ratio = st.sidebar.slider("Debt Ratio", 0.0, 2.0, 0.5)
-revolving_utilization = st.sidebar.slider("Revolving Utilization", 0.0, 1.0, 0.5)
-num_dependents = st.sidebar.number_input("Number of Dependents", value=1, step=1)
-num_open_credit = st.sidebar.number_input("Open Credit Lines and Loans", value=5, step=1)
-num_real_estate_loans = st.sidebar.number_input("Real Estate Loans", value=1, step=1)
-num_30_59 = st.sidebar.slider("30-59 Days Past Due", 0, 10, 0)
-num_60_89 = st.sidebar.slider("60-89 Days Past Due", 0, 10, 0)
-num_90_late = st.sidebar.slider("90+ Days Late", 0, 10, 0)
+# --- Content Sections ---
+if menu == "🏠 Welcome":
+    st.markdown(f'<div class="big-header">✨ Resume vs Reality</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="insight-card">Welcome! Think of this as your stylish, brutally honest older sister telling you what *actually* lands the job. Data doesn’t lie—but it can sparkle! 💅</div>',
+        unsafe_allow_html=True)
+    st.markdown("Use the sidebar to explore skills, roles, and your hiring potential. Let’s glow up your resume! 💖")
 
-# Predict
-input_data = pd.DataFrame([[revolving_utilization, age, num_30_59, debt_ratio, monthly_income,
-                            num_open_credit, num_90_late, num_real_estate_loans,
-                            num_60_89, num_dependents]],
-                          columns=X.columns)
+elif menu == "📊 Insights":
+    st.markdown("<h2 style='color:#ff4da6;'>Key Skill Insights</h2>", unsafe_allow_html=True)
+    
+    # Bar Chart
+    fig = px.bar(
+        skills, x="Skill", y=["Job Ads", "Resumes", "Hires"],
+        barmode="group", color_discrete_sequence=[PINK, WHITE, "#65fcda"]
+    )
+    fig.update_layout(
+        plot_bgcolor=BLACK, paper_bgcolor=BLACK, font_color=WHITE,
+        legend=dict(font=dict(color=WHITE)), xaxis=dict(color=WHITE), yaxis=dict(color=WHITE)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-input_scaled = scaler.transform(input_data)
-prediction = model.predict(input_scaled)[0]
-probability = model.predict_proba(input_scaled)[0][1]
+    st.markdown(
+        '<div class="insight-card">💡 <b>Insight:</b> Resumes love soft skills like "Teamwork", but hiring favors actual tools—Python, SQL, and Excel. So yes, be nice—but also know your way around a database. 😉</div>',
+        unsafe_allow_html=True
+    )
 
-# Output
-if prediction == 1:
-    st.error(f"❌ High Credit Risk\nProbability of Default: {probability:.2f}")
-else:
-    st.success(f"✅ Low Credit Risk\nProbability of Default: {probability:.2f}")
+elif menu == "📈 Role Explorer":
+    st.markdown("<h2 style='color:#ff4da6;'>Explore By Role</h2>", unsafe_allow_html=True)
+    role = st.selectbox("Choose a target job role", list(skills_role.keys()))
+    core_skills = skills_role.get(role, [])
+    core = ", ".join(core_skills)
+    st.markdown(f'<div class="insight-card"><b>{role} roles:</b> Most-wanted skills are {core}.</div>', unsafe_allow_html=True)
+
+    # Pie Chart
+    role_data = pd.DataFrame({
+        "Skill": core_skills,
+        "Importance": [100 - i * 20 for i in range(len(core_skills))]
+    })
+    fig = px.pie(role_data, names="Skill", values="Importance",
+                 title=f"Top Skills for {role}",
+                 color_discrete_sequence=[PINK, ORANGE, WHITE])
+    st.plotly_chart(fig, use_container_width=True)
+
+elif menu == "🎯 Score & Feedback":
+    st.markdown("<h2 style='color:#ff4da6;'>Your Score & Advice</h2>", unsafe_allow_html=True)
+    myskills = st.text_input("Enter your skills (comma-separated)", "Excel, Python, Communication")
+    role = st.selectbox("Target role?", list(skills_role.keys()), key="scorerole")
+    pick = set([x.strip().capitalize() for x in myskills.split(",") if x.strip()])
+    target = set(skills_role.get(role, []))
+    score = int(100 * len(pick & target) / len(target)) if target else 0
+
+    st.progress(score)
+    st.metric("Resume Fit Score", f"{score}/100")
+
+    missing = target - pick
+    advice = {
+        "Python": "Learning Python can launch your Analyst career.",
+        "SQL": "SQL is crucial for data roles.",
+        "Excel": "Excel is essential everywhere.",
+        "Canva": "Canva helps tell visual stories for Marketers.",
+        "SEO": "SEO skills boost digital marketing jobs.",
+        "Market Research": "Strengthen your market research side.",
+        "Recruitment": "HR jobs always value recruitment skills.",
+        "Communication": "Communication matters in every field.",
+        "Negotiation": "Negotiation sets Sales pros apart.",
+        "CRM": "Salesforce/HubSpot experience is valued!"
+    }
+
+    if score == 100:
+        st.balloons()
+        st.markdown('<div class="insight-card" style="border-left:8px solid #65fc65;">🌟 Amazing! You’ve nailed the perfect match. Add a little sparkle and hit submit!</div>', unsafe_allow_html=True)
+    elif score >= 60:
+        st.snow()
+        st.markdown(f'<div class="insight-card">You’re almost there! You might want to brush up on: {", ".join(missing)}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown("<div class='insight-card' style='border-left:8px solid #ffae42;'>Let’s glow up your skill set. Here’s what to work on:</div>", unsafe_allow_html=True)
+        for skill in missing:
+            st.markdown(f'<div class="insight-card" style="border-left:7px solid #ffc400;">{advice.get(skill, "Add " + skill.title())}</div>', unsafe_allow_html=True)
+
+elif menu == "ℹ️ About":
+    st.markdown("<h2 style='color:#ff4da6;'>About This Project</h2>", unsafe_allow_html=True)
+    st.markdown("<div class='insight-card'>This app was lovingly crafted to expose the real hiring truth. It’s stylish, sassy, and straight from the data. No fluff—just facts and fun. Share it, learn from it, and glow up your career. 💖</div>", unsafe_allow_html=True)
