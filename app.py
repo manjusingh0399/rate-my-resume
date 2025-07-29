@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# === Theme Colors ===
-BG_COLOR = "#fefaf6"
+# Theme colors
+BG_COLOR = "#fffdf9"
 PINK = "#ff5c8a"
 ORANGE = "#ffb347"
 TEXT = "#2c2c2c"
@@ -11,11 +11,12 @@ BLUE = "#82cfff"
 
 st.set_page_config(page_title="Resume vs Reality", page_icon="📄", layout="wide")
 
-# === Custom Styling ===
+# Custom CSS
 st.markdown(f"""
     <style>
     .stApp {{
         background-color: {BG_COLOR};
+        color: {TEXT};
     }}
     h1, h2, h3 {{
         color: {PINK};
@@ -39,7 +40,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# === Load Dummy Data (replace with yours in real case) ===
+# Dummy data (replace with your own in production)
 @st.cache_data
 def load_data():
     return pd.DataFrame({
@@ -69,37 +70,40 @@ advice_map = {
     "CRM": "CRM tools help manage leads, deals, and relationships."
 }
 
-# === Tabs ===
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏠 Welcome", "📊 Overview", "🎯 Fit Score", "💡 Suggestions", "ℹ️ About"])
+# Tabs
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏠 Welcome", "📊 Skill Insights", "🎯 Fit Score", "💡 Suggestions", "ℹ️ About"])
 
-# === Welcome Tab ===
+# --- Tab 1: Welcome ---
 with tab1:
     st.markdown("<h1 style='text-align:center;'>✨ Welcome to Resume vs Reality</h1>", unsafe_allow_html=True)
+
     st.markdown(f"""
         <div class='description-box'>
-            Ever wondered if the skills you're putting on your resume actually help you get hired?  
-            This app compares data from real <b>job listings</b>, <b>resumes</b>, and <b>hired candidates</b> to answer that.
-            <br><br>
-            <b>What this app does:</b>
+            <h3 style="color:{PINK};">Why this App Exists</h3>
+            <p>You're here because you're ready to stop guessing and start growing. This app helps you bridge the gap between what you put on your resume and what actually gets people hired.</p>
             <ul>
-                <li>📊 Shows which skills are common in resumes vs real jobs</li>
-                <li>🎯 Gives a personalized “resume fit score” for different roles</li>
-                <li>💡 Offers custom skill suggestions to improve your chances</li>
+                <li>📌 Discover which skills matter across resumes, job ads, and real hires</li>
+                <li>📈 Check how well your skills match a role</li>
+                <li>💡 Get suggestions on how to improve</li>
             </ul>
-            <b>How to use it:</b>
-            <ol>
-                <li>Start with the <b>Overview</b> to see general skill trends.</li>
-                <li>Use <b>Fit Score</b> to test your current resume.</li>
-                <li>Check <b>Suggestions</b> to improve and align better.</li>
-            </ol>
-            Think of this as your career-savvy older sister giving you advice — but with charts and real data 😉
+            <p>Each tab walks you through a real, supportive journey — from insight to action. Built for job seekers, by one of them.</p>
         </div>
     """, unsafe_allow_html=True)
 
-# === Overview Tab ===
+    st.markdown(f"""
+        <div class='description-box'>
+            <h3 style="color:{ORANGE};">👋 A Word from the Developer</h3>
+            <p>Hi! I'm Manju – an MBA student, a data enthusiast, and just like you — someone who's chasing opportunities and feeling all the uncertainties that come with it.</p>
+            <p>I created this app out of my own job-search anxiety. I wanted to transform that anxiety into something empowering — into a light in the dark for anyone who’s struggling with where to begin or how to improve.</p>
+            <p>So take a breath, dig in, and let the data show you where you shine and where you can grow. Let’s build something together.</p>
+            <p style="color:{PINK};"><i>“You’re not behind. You’re building. Let’s make those skills count.”</i></p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# --- Tab 2: Skill Insights ---
 with tab2:
-    st.markdown("<div class='section-header'>📊 Skills Across Sources</div>", unsafe_allow_html=True)
-    st.markdown("<div class='description-box'>How popular is your skill — really? This chart compares job ads, resumes, and hired profiles.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>📊 What Skills Appear Where?</div>", unsafe_allow_html=True)
+    st.markdown("<div class='description-box'>Compare how often each skill appears in job ads, resumes, and among people who actually got hired.</div>", unsafe_allow_html=True)
 
     fig = px.bar(skills_data, x="Skill", y=["Job Ads", "Resumes", "Hires"], barmode="group",
                  color_discrete_sequence=[PINK, ORANGE, BLUE])
@@ -110,16 +114,16 @@ with tab2:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-# === Fit Score Tab ===
+# --- Tab 3: Fit Score ---
 with tab3:
-    st.markdown("<div class='section-header'>🎯 Check Your Resume Fit</div>", unsafe_allow_html=True)
-    st.markdown("<div class='description-box'>Enter your skills + target role to see how well you align with what’s actually in demand.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>🎯 How Well Do You Fit?</div>", unsafe_allow_html=True)
+    st.markdown("<div class='description-box'>Enter your skills and role to see your resume's relevance score and how close you are to nailing the job!</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        input_skills = st.text_input("Your Skills (comma-separated)", "Excel, Python, Communication")
+        input_skills = st.text_input("🧾 Your Skills (comma-separated)", "Excel, Python, Communication")
     with col2:
-        role = st.selectbox("Target Role", list(skills_role.keys()))
+        role = st.selectbox("🎯 Target Role", list(skills_role.keys()))
 
     user_set = set([x.strip().capitalize() for x in input_skills.split(",") if x.strip()])
     target_set = set(skills_role.get(role, []))
@@ -130,35 +134,30 @@ with tab3:
 
     missing = target_set - user_set
     if missing:
-        st.warning(f"You're missing: {', '.join(missing)}")
+        st.warning(f"🧩 You're missing: {', '.join(missing)}")
     else:
-        st.success("Your resume is a great fit! 💖")
+        st.success("✅ Perfect match! You’re ready for this role!")
 
-# === Suggestions Tab ===
+# --- Tab 4: Suggestions ---
 with tab4:
-    st.markdown("<div class='section-header'>💡 Skill Advice</div>", unsafe_allow_html=True)
-    st.markdown("<div class='description-box'>Based on your goal role, here’s what to consider adding to your resume:</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>💡 Where You Can Grow</div>", unsafe_allow_html=True)
+    st.markdown("<div class='description-box'>Based on your match, here’s what you can improve to get closer to that dream role.</div>", unsafe_allow_html=True)
 
     if missing:
         for skill in missing:
             st.markdown(f"<div class='description-box'>🌱 <b>{skill}</b>: {advice_map.get(skill, 'Try learning ' + skill.title())}</div>", unsafe_allow_html=True)
     else:
-        st.success("You’re already matching all top skills. Well done!")
+        st.success("🎉 You're already rocking the skills this role needs!")
 
-# === About Tab ===
+# --- Tab 5: About ---
 with tab5:
-    st.markdown("<div class='section-header'>ℹ️ About This App</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>ℹ️ About Resume vs Reality</div>", unsafe_allow_html=True)
     st.markdown(f"""
         <div class='description-box'>
-            This dashboard was created to bridge the gap between what job seekers think matters and what actually does.
+            This app is designed to demystify the job hunt. It’s based on comparing skill sets across resumes, job ads, and actual hires.
             <br><br>
-            Powered by real data from:
-            <ul>
-                <li>📝 Job Listings</li>
-                <li>👥 Resumes</li>
-                <li>✅ Hired Profiles</li>
-            </ul>
-            We believe feedback should be smart, actionable, and kind. ❤️<br>
-            Designed by Manju + ChatGPT.
+            Rather than throwing buzzwords on a page, you’ll learn what really gives people an edge — and how to build your own edge.
+            <br><br>
+            Created with ❤️ by Manju Singh — aspiring analyst, MBA student, and fellow job seeker.
         </div>
     """, unsafe_allow_html=True)
